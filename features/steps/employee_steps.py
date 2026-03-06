@@ -42,6 +42,36 @@ def click_submit(driver):
     driver.execute_script("arguments[0].click();", submit_btn)
 
 
+def search_employee(driver, wait, fullname):
+    """
+    Navigue vers la liste des employés et recherche par nom complet.
+    Utilise vue_set_value pour déclencher les événements réactifs Vue.js.
+    """
+    driver.get(BASE_URL + "/web/index.php/pim/viewEmployeeList")
+    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "oxd-table")))
+    wait_for_loader(driver)
+    time.sleep(3)  # laisser Vue finir le rendu du composant autocomplete
+
+    name_input = wait.until(
+        EC.visibility_of_element_located(
+            (By.XPATH, "//label[text()='Employee Name']/following::input[1]")
+        )
+    )
+    # Utiliser vue_set_value au lieu de send_keys pour déclencher la réactivité Vue
+    vue_set_value(driver, name_input, fullname)
+    time.sleep(2)
+
+    suggestions = driver.find_elements(By.XPATH, "//div[@role='option']")
+    if suggestions:
+        suggestions[0].click()
+        time.sleep(1)
+    else:
+        print("⚠️ Pas d'autocomplete, recherche directe")
+
+    driver.find_element(By.XPATH, "//button[@type='submit']").click()
+    time.sleep(3)
+
+
 def set_employee_id(driver, wait):
     """Try to set a unique Employee ID, retrying with a new random ID if already taken."""
     max_attempts = 10
@@ -114,7 +144,7 @@ def step_login(context):
 @when("je crée un nouvel employé")
 def step_add_employee(context):
     driver = context.driver
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 30)
 
     suffix = datetime.datetime.now().strftime("%H%M%S")
     context.emp_firstname = "QA"
@@ -150,57 +180,25 @@ def step_add_employee(context):
 @then("l'employé doit apparaître dans la liste des employés")
 def step_verify_employee(context):
     driver = context.driver
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 30)  # augmenté à 30s
 
-    driver.get(BASE_URL + "/web/index.php/pim/viewEmployeeList")
-    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "oxd-table")))
-    time.sleep(2)
+    # FIX : utiliser search_employee qui se base sur vue_set_value
+    search_employee(driver, wait, context.emp_fullname)
 
-    name_input = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//label[text()='Employee Name']/following::input[1]")
-        )
+    rows = driver.find_elements(
+        By.XPATH, "//div[@class='oxd-table-body']//div[@role='row']"
     )
-    name_input.send_keys(context.emp_fullname)
-    time.sleep(2)
-
-    suggestions = driver.find_elements(By.XPATH, "//div[@role='option']")
-    if suggestions:
-        suggestions[0].click()
-    else:
-        print(f"⚠️ Pas d'autocomplete, recherche directe")
-
-    driver.find_element(By.XPATH, "//button[@type='submit']").click()
-    time.sleep(3)
-
-    rows = driver.find_elements(By.XPATH, "//div[@class='oxd-table-body']//div[@role='row']")
-    assert len(rows) > 0, f"❌ Employé '{context.emp_fullname}' non trouvé"
+    assert len(rows) > 0, f"❌ Employé '{context.emp_fullname}' non trouvé dans la liste"
     print(f"✅ Employé {context.emp_fullname} trouvé dans la liste")
 
 
 @when("je modifie les informations de l'employé")
 def step_edit_employee(context):
     driver = context.driver
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 30)
 
-    driver.get(BASE_URL + "/web/index.php/pim/viewEmployeeList")
-    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "oxd-table")))
-    time.sleep(2)
-
-    name_input = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//label[text()='Employee Name']/following::input[1]")
-        )
-    )
-    name_input.send_keys(context.emp_fullname)
-    time.sleep(2)
-
-    suggestions = driver.find_elements(By.XPATH, "//div[@role='option']")
-    if suggestions:
-        suggestions[0].click()
-
-    driver.find_element(By.XPATH, "//button[@type='submit']").click()
-    time.sleep(3)
+    # FIX : utiliser la fonction commune search_employee
+    search_employee(driver, wait, context.emp_fullname)
 
     edit_btn = wait.until(
         EC.element_to_be_clickable(
@@ -247,26 +245,10 @@ def step_verify_update(context):
 @when("je supprime l'employé")
 def step_delete_employee(context):
     driver = context.driver
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 30)
 
-    driver.get(BASE_URL + "/web/index.php/pim/viewEmployeeList")
-    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "oxd-table")))
-    time.sleep(2)
-
-    name_input = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//label[text()='Employee Name']/following::input[1]")
-        )
-    )
-    name_input.send_keys(context.emp_fullname)
-    time.sleep(2)
-
-    suggestions = driver.find_elements(By.XPATH, "//div[@role='option']")
-    if suggestions:
-        suggestions[0].click()
-
-    driver.find_element(By.XPATH, "//button[@type='submit']").click()
-    time.sleep(3)
+    # FIX : utiliser la fonction commune search_employee
+    search_employee(driver, wait, context.emp_fullname)
 
     delete_btn = wait.until(
         EC.element_to_be_clickable(
@@ -294,13 +276,17 @@ def step_verify_delete(context):
     driver = context.driver
     wait = WebDriverWait(driver, 20)
 
+    # Rester sur la page courante (déjà sur viewEmployeeList après suppression)
+    wait_for_loader(driver)
+    time.sleep(2)
+
     name_input = wait.until(
-        EC.element_to_be_clickable(
+        EC.visibility_of_element_located(
             (By.XPATH, "//label[text()='Employee Name']/following::input[1]")
         )
     )
     name_input.clear()
-    name_input.send_keys(context.emp_fullname)
+    vue_set_value(driver, name_input, context.emp_fullname)
     time.sleep(2)
 
     suggestions = driver.find_elements(By.XPATH, "//div[@role='option']")
@@ -309,6 +295,7 @@ def step_verify_delete(context):
         return
 
     suggestions[0].click()
+    time.sleep(1)
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
     time.sleep(3)
 
