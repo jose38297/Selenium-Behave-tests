@@ -24,7 +24,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install chromedriver-binary-auto
-
     - name: Install Chrome
       uses: browser-actions/setup-chrome@v1
       with:

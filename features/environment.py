@@ -1,5 +1,6 @@
 
 # features/environment.py
+"""
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -37,4 +38,3 @@ def after_all(context):
 
     context.driver.quit()
     
-"""
