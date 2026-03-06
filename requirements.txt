@@ -1,3 +1,13 @@
+# Test framework
 behave
+
+# Browser automation
 selenium
 webdriver-manager
+
+# Reporting
+allure-behave
+
+# Utilities
+Pillow
+python-dotenv
