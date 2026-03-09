@@ -44,4 +44,12 @@ jobs:
       run: |
         chcp 65001
         python -m behave
-
+    
+    - name: Run Behave tests (UTF-8)
+      shell: pwsh
+      env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+      run: |
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        python -X utf8 -m behave -f plain
