@@ -37,5 +37,11 @@ jobs:
     - name: Run Behave tests
       run: behave
 
-
+    - name: Run Behave tests
+      env:
+        PYTHONUTF8: "1"
+        PYTHONIOENCODING: "utf-8"
+      run: |
+        chcp 65001
+        python -m behave
 
