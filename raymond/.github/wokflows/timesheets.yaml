@@ -21,6 +21,6 @@ jobs:
         working-directory: raymond
         run: pip install -r requirements.txt
 
-      - name: Run Behave tests
+      - name: behave raymond/features/timesheets.feature tests
         working-directory: raymond
         run: behave
