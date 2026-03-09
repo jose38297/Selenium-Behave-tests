@@ -1,0 +1,4 @@
+# Dépendances du projet de tests automatisés OrangeHRM
+selenium>=4.6.0
+behave>=1.2.6
+webdriver-manager>=4.0.0   # Optionnel : gestion automatique du ChromeDriver

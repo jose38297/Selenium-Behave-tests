@@ -1,0 +1,7 @@
+pycache/
+*.pyc
+venv/
+.env
+reports/
+allure-results/
+.DS_Store
