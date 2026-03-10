@@ -59,7 +59,7 @@ def set_employee_id(driver, wait):
         vue_set_value(driver, emp_id_field, new_id)
         time.sleep(0.5)
 
-        print(f"🔍 Tentative {attempt + 1} — Employee ID: {new_id}")
+        print(f"Tentative {attempt + 1} — Employee ID: {new_id}")
 
         # Click Save (JS click to bypass any overlay)
         click_submit(driver)
@@ -73,12 +73,12 @@ def set_employee_id(driver, wait):
         id_error_texts = [e.text for e in id_errors if e.text.strip()]
 
         if id_error_texts:
-            print(f"⚠️ ID {new_id} rejeté: {id_error_texts} — nouvel essai...")
+            print(f" ID {new_id} rejeté: {id_error_texts} — nouvel essai...")
             continue
 
         # Success: URL changed away from addEmployee
         if "addEmployee" not in driver.current_url:
-            print(f"✅ Employee ID {new_id} accepté")
+            print(f" Employee ID {new_id} accepté")
             return True
 
         # Still on page — check for other errors
@@ -87,12 +87,12 @@ def set_employee_id(driver, wait):
         )
         other_texts = [e.text for e in other_errors if e.text.strip()]
         if other_texts:
-            print(f"❌ Autres erreurs (non liées à l'ID): {other_texts}")
+            print(f" Autres erreurs (non liées à l'ID): {other_texts}")
             return False
 
-        print(f"⚠️ Toujours sur addEmployee sans erreur visible — nouvel essai ID...")
+        print(f" Toujours sur addEmployee sans erreur visible — nouvel essai ID...")
 
-    raise AssertionError(f"❌ Impossible de trouver un Employee ID unique après {max_attempts} tentatives")
+    raise AssertionError(f"Impossible de trouver un Employee ID unique après {max_attempts} tentatives")
 
 
 @given("je suis connecté en tant qu'admin")
@@ -108,7 +108,7 @@ def step_login(context):
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
     wait.until(EC.url_contains("/dashboard"))
-    print("✅ Connecté avec succès")
+    print("Connecté avec succès")
 
 
 @when("je crée un nouvel employé")
@@ -133,8 +133,8 @@ def step_add_employee(context):
     vue_set_value(driver, ln, context.emp_lastname)
     time.sleep(0.5)
 
-    print(f"🔍 firstName: {fn.get_attribute('value')}")
-    print(f"🔍 lastName:  {ln.get_attribute('value')}")
+    print(f"firstName: {fn.get_attribute('value')}")
+    print(f"lastName:  {ln.get_attribute('value')}")
 
     # Set unique Employee ID with auto-retry
     set_employee_id(driver, wait)
@@ -142,9 +142,9 @@ def step_add_employee(context):
     if "addEmployee" in driver.current_url:
         errors = driver.find_elements(By.XPATH, "//span[contains(@class,'oxd-input-field-error-message')]")
         error_texts = [e.text for e in errors if e.text.strip()]
-        raise AssertionError(f"❌ Toujours sur addEmployee. Erreurs: {error_texts}")
+        raise AssertionError(f"Toujours sur addEmployee. Erreurs: {error_texts}")
 
-    print(f"✅ Employé {context.emp_fullname} créé — URL: {driver.current_url}")
+    print(f"Employé {context.emp_fullname} créé — URL: {driver.current_url}")
 
 
 @then("l'employé doit apparaître dans la liste des employés")
@@ -168,14 +168,14 @@ def step_verify_employee(context):
     if suggestions:
         suggestions[0].click()
     else:
-        print(f"⚠️ Pas d'autocomplete, recherche directe")
+        print(f"Pas d'autocomplete, recherche directe")
 
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
     time.sleep(3)
 
     rows = driver.find_elements(By.XPATH, "//div[@class='oxd-table-body']//div[@role='row']")
-    assert len(rows) > 0, f"❌ Employé '{context.emp_fullname}' non trouvé"
-    print(f"✅ Employé {context.emp_fullname} trouvé dans la liste")
+    assert len(rows) > 0, f"Employé '{context.emp_fullname}' non trouvé"
+    print(f"Employé {context.emp_fullname} trouvé dans la liste")
 
 
 @when("je modifie les informations de l'employé")
@@ -216,7 +216,7 @@ def step_edit_employee(context):
     vue_set_value(driver, firstname, "Automation")
     time.sleep(0.5)
 
-    print(f"🔍 firstName après édition: {firstname.get_attribute('value')}")
+    print(f"firstName après édition: {firstname.get_attribute('value')}")
 
     context.emp_firstname = "Automation"
     context.emp_fullname  = f"Automation {context.emp_lastname}"
@@ -229,7 +229,7 @@ def step_edit_employee(context):
             (By.XPATH, "//div[contains(@class,'oxd-toast--success')]")
         )
     )
-    print("✅ Employé modifié avec succès")
+    print("Employé modifié avec succès")
 
 
 @then("les informations mises à jour doivent être visibles")
@@ -239,9 +239,9 @@ def step_verify_update(context):
 
     wait.until(EC.visibility_of_element_located((By.NAME, "firstName")))
     name = driver.find_element(By.NAME, "firstName").get_attribute("value")
-    print(f"🔍 firstName lu: '{name}'")
-    assert name == "Automation", f"❌ Attendu 'Automation', obtenu '{name}'"
-    print("✅ Mise à jour vérifiée")
+    print(f"firstName lu: '{name}'")
+    assert name == "Automation", f"Attendu 'Automation', obtenu '{name}'"
+    print("Mise à jour vérifiée")
 
 
 @when("je supprime l'employé")
@@ -286,7 +286,7 @@ def step_delete_employee(context):
             (By.XPATH, "//div[contains(@class,'oxd-toast--success')]")
         )
     )
-    print("✅ Employé supprimé avec succès")
+    print("Employé supprimé avec succès")
 
 
 @then("l'employé ne doit plus apparaître dans la liste")
@@ -305,7 +305,7 @@ def step_verify_delete(context):
 
     suggestions = driver.find_elements(By.XPATH, "//div[@role='option']")
     if not suggestions:
-        print("✅ Aucune suggestion → employé bien supprimé")
+        print("Aucune suggestion → employé bien supprimé")
         return
 
     suggestions[0].click()
@@ -315,5 +315,5 @@ def step_verify_delete(context):
     rows = driver.find_elements(
         By.XPATH, "//div[@class='oxd-table-body']//div[@role='row']"
     )
-    assert len(rows) == 0, "❌ L'employé apparaît encore après suppression"
-    print("✅ Suppression confirmée")
+    assert len(rows) == 0, "L'employé apparaît encore après suppression"
+    print("Suppression confirmée")
